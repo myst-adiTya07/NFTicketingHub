@@ -5,66 +5,66 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract NFTicketingHub is ERC721, Ownable {
-    uint256 public totalEvents;
-    uint256 public constant TICKET_PRICE = 0.01 ether;
+    uint256 public eventCount;
+    uint256 public constant FIXED_TICKET_PRICE = 0.01 ether;
 
-    struct Event {
-        string name;
-        uint256 date;
-        uint256 totalTickets;
-        uint256 ticketsSold;
-        bool isActive;
+    struct EventDetails {
+        string title;
+        uint256 eventDate;
+        uint256 maxTickets;
+        uint256 ticketsIssued;
+        bool available;
     }
 
-    mapping(uint256 => Event) public events;
-    mapping(uint256 => mapping(address => bool)) public hasPurchased;
+    mapping(uint256 => EventDetails) public eventData;
+    mapping(uint256 => mapping(address => bool)) public ticketHolders;
 
     constructor() ERC721("NFTicketingHub", "NFTICKET") Ownable(msg.sender) {}
 
-    /// @notice Admin can initialize a new event
-    function createEvent(
-        string calldata name_,
-        uint256 date_,
-        uint256 totalTickets_
+    /// @notice Owner can add a new event with basic information
+    function registerEvent(
+        string calldata title_,
+        uint256 eventDate_,
+        uint256 maxTickets_
     ) external onlyOwner {
-        events[totalEvents] = Event({
-            name: name_,
-            date: date_,
-            totalTickets: totalTickets_,
-            ticketsSold: 0,
-            isActive: true
+        eventData[eventCount] = EventDetails({
+            title: title_,
+            eventDate: eventDate_,
+            maxTickets: maxTickets_,
+            ticketsIssued: 0,
+            available: true
         });
-        totalEvents++;
+        eventCount++;
     }
 
-    /// @notice User can buy a ticket for a given event
-    function purchaseTicket(uint256 eventId) external payable {
-        Event storage evt = events[eventId];
+    /// @notice Public function to buy a ticket for a selected event
+    function buyTicket(uint256 eventId) external payable {
+        EventDetails storage selectedEvent = eventData[eventId];
 
-        require(evt.isActive, "This event is currently inactive");
-        require(msg.value >= TICKET_PRICE, "Insufficient payment for ticket");
-        require(!hasPurchased[eventId][msg.sender], "User already owns a ticket");
-        require(evt.ticketsSold < evt.totalTickets, "All tickets have been sold");
+        require(selectedEvent.available, "Event is disabled or unavailable");
+        require(msg.value >= FIXED_TICKET_PRICE, "Payment does not meet ticket cost");
+        require(!ticketHolders[eventId][msg.sender], "Ticket already bought by user");
+        require(selectedEvent.ticketsIssued < selectedEvent.maxTickets, "Tickets exhausted");
 
-        evt.ticketsSold++;
-        hasPurchased[eventId][msg.sender] = true;
+        selectedEvent.ticketsIssued++;
+        ticketHolders[eventId][msg.sender] = true;
 
-        uint256 tokenId = _generateTokenId(eventId, evt.ticketsSold);
+        uint256 tokenId = _composeTokenId(eventId, selectedEvent.ticketsIssued);
         _mint(msg.sender, tokenId);
     }
 
-    /// @notice Admin can enable or disable an event
-    function toggleEventStatus(uint256 eventId) external onlyOwner {
-        events[eventId].isActive = !events[eventId].isActive;
+    /// @notice Enables or disables an existing event (by owner)
+    function switchEventStatus(uint256 eventId) external onlyOwner {
+        eventData[eventId].available = !eventData[eventId].available;
     }
 
-    /// @notice Transfers all collected funds to the contract owner
-    function withdrawFunds() external onlyOwner {
+    /// @notice Transfers all ETH balance from contract to the owner's address
+    function releaseFunds() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
     }
 
-    /// @dev Produces a unique token ID using the event ID and ticket serial
-    function _generateTokenId(uint256 eventId, uint256 ticketNumber) private pure returns (uint256) {
-        return eventId * 1000 + ticketNumber;
+    /// @dev Generates a token ID by combining event ID and its ticket number
+    function _composeTokenId(uint256 eventId, uint256 ticketSeq) private pure returns (uint256) {
+        return eventId * 1000 + ticketSeq;
     }
 }
