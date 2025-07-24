@@ -48,6 +48,7 @@ contract NFTicketingHub is ERC721, Ownable {
         require(selectedEvent.ticketsIssued < selectedEvent.maxTickets, "Tickets exhausted");
 
         selectedEvent.ticketsIssued++;
+
         ticketHolders[eventId][msg.sender] = true;
 
         uint256 tokenId = _composeTokenId(eventId, selectedEvent.ticketsIssued);
