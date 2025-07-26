@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+
 contract NFTicketingHub is ERC721, Ownable {
     uint256 public eventCount;
     uint256 public constant FIXED_TICKET_PRICE = 0.01 ether;
