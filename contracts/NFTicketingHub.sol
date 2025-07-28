@@ -18,8 +18,6 @@ contract NFTicketingHub is ERC721, Ownable {
         bool available;
     }
 
-
-
     mapping(uint256 => EventDetails) public eventData;
     mapping(uint256 => mapping(address => bool)) public ticketHolders;
 
