@@ -67,6 +67,7 @@ contract NFTicketingHub is ERC721, Ownable {
     }
 
 
+
     /// @notice Transfers all ETH balance from contract to the owner's address
     function releaseFunds() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
