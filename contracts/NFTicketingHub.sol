@@ -54,6 +54,7 @@ contract NFTicketingHub is ERC721, Ownable {
 
         selectedEvent.ticketsIssued++;
 
+
         ticketHolders[eventId][msg.sender] = true;
 
         uint256 tokenId = _composeTokenId(eventId, selectedEvent.ticketsIssued);
